@@ -466,6 +466,9 @@ docker-compose -f ./docker/monitoring-compose.yml up -d
 ```bash
 # docker compose -f ./docker/infra-compose.yml up 실행 필수
 ./gradlew clean build
+
+# build/reports/jacoco/jacocoRootReport/html/index.html 에 리포트 생성
+./gradlew test jacocoRootReport
 ```
 
 ### API 테스트

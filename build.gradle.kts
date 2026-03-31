@@ -128,3 +128,54 @@ subprojects {
 project("apps") { tasks.configureEach { enabled = false } }
 project("modules") { tasks.configureEach { enabled = false } }
 project("supports") { tasks.configureEach { enabled = false } }
+
+// 전체 서브모듈의 Jacoco 리포트를 통합
+apply(plugin = "jacoco")
+
+tasks.register<JacocoReport>("jacocoRootReport") {
+    dependsOn(subprojects.map { it.tasks.withType<JacocoReport>() })
+
+    executionData.setFrom(
+        files(
+            subprojects.map { sub ->
+                sub.fileTree("${sub.layout.buildDirectory.asFile.get()}/jacoco") { include("*.exec") }
+            },
+        ),
+    )
+
+    sourceDirectories.setFrom(
+        files(
+            subprojects.flatMap { sub ->
+                listOf(sub.file("src/main/kotlin"), sub.file("src/main/java"))
+            },
+        ),
+    )
+
+    classDirectories.setFrom(
+        provider {
+            val seen = mutableSetOf<String>()
+            subprojects.flatMap { sub ->
+                listOf("kotlin", "java").flatMap { lang ->
+                    val classDir = sub.layout.buildDirectory.asFile.get().resolve("classes/$lang/main")
+                    if (classDir.exists()) {
+                        classDir.walkTopDown()
+                            .filter { it.isFile && it.name.endsWith(".class") }
+                            .filter { seen.add(it.relativeTo(classDir).path) }
+                            .toList()
+                    } else {
+                        emptyList()
+                    }
+                }
+            }
+        },
+    )
+
+    reports {
+        xml.required = true
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/jacocoRootReport/html")
+        csv.required = true
+        csv.outputLocation = layout.buildDirectory.file("reports/jacoco/jacocoRootReport/jacocoRootReport.csv")
+    }
+}
