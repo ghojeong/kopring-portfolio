@@ -38,6 +38,9 @@ interface ProductJpaRepository : JpaRepository<Product, Long> {
     )
     fun findByBrandIdOrderByLikeCount(brandId: Long, pageable: Pageable): Page<Product>
 
+    @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.id IN :ids")
+    fun findAllByIdWithBrand(@Param("ids") ids: List<Long>): List<Product>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     fun findByIdWithLock(@Param("id") id: Long): Product?

@@ -13,7 +13,8 @@ import org.springframework.stereotype.Repository
 class ProductRepositoryImpl(private val productJpaRepository: ProductJpaRepository) : ProductRepository {
     override fun findById(id: Long): Product? = productJpaRepository.findByIdOrNull(id)
 
-    override fun findAllById(ids: List<Long>): List<Product> = productJpaRepository.findAllById(ids)
+    override fun findAllById(ids: List<Long>): List<Product> =
+        if (ids.isEmpty()) emptyList() else productJpaRepository.findAllByIdWithBrand(ids)
 
     override fun findByIdInAndDeletedAtIsNull(ids: List<Long>): List<Product> =
         productJpaRepository.findByIdInAndDeletedAtIsNull(ids)

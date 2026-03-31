@@ -51,25 +51,27 @@ class PaymentService(
     @Retry(name = "pgRetry", fallbackMethod = "requestPgPaymentFallback")
     @CircuitBreaker(name = "pgCircuit", fallbackMethod = "requestPgPaymentFallback")
     fun requestPgPayment(payment: Payment): String {
-        if (payment.cardType == null || payment.cardNo == null) {
+        val cardTypeStr = payment.cardType
+        val cardNoStr = payment.cardNo
+        if (cardTypeStr == null || cardNoStr == null) {
             throw CoreException(ErrorType.BAD_REQUEST, "카드 결제 시 카드 정보는 필수입니다.")
         }
 
         // CardTypeDto를 안전하게 파싱
         val cardType = try {
-            CardTypeDto.valueOf(payment.cardType)
+            CardTypeDto.valueOf(cardTypeStr)
         } catch (e: IllegalArgumentException) {
-            logger.warn("유효하지 않은 카드 타입: ${payment.cardType}, 허용된 값: ${CardTypeDto.entries.joinToString()}")
+            logger.warn("유효하지 않은 카드 타입: $cardTypeStr, 허용된 값: ${CardTypeDto.entries.joinToString()}")
             throw CoreException(
                 ErrorType.BAD_REQUEST,
-                "유효하지 않은 카드 타입입니다: ${payment.cardType}. 허용된 값: ${CardTypeDto.entries.joinToString()}",
+                "유효하지 않은 카드 타입입니다: $cardTypeStr. 허용된 값: ${CardTypeDto.entries.joinToString()}",
             )
         }
 
         val request = PgPaymentRequest(
             orderId = payment.orderId.toString(),
             cardType = cardType,
-            cardNo = payment.cardNo,
+            cardNo = cardNoStr,
             amount = payment.amount,
             callbackUrl = "$callbackBaseUrl/api/v1/payments/callback",
         )
