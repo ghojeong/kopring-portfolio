@@ -102,8 +102,8 @@ subprojects {
         executionData(fileTree(layout.buildDirectory.asFile).include("jacoco/*.exec"))
         reports {
             xml.required = true
-            csv.required = false
-            html.required = false
+            csv.required = true
+            html.required = true
         }
         afterEvaluate {
             classDirectories.setFrom(
